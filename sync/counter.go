@@ -12,9 +12,7 @@
 package sync
 
 import (
-	"errors"
 	"sync/atomic"
-	sync_atomic "sync/atomic"
 )
 
 // Count-down-to-zero (and beyond, a bit) numeric latch
@@ -29,7 +27,7 @@ func (l *_baseCounter) step(increment int64) (newCount int64) {
 	return
 }
 
-func (l *_baseLatch) load() (count int64) {
+func (l *_baseCounter) load() (count int64) {
 
 	count = atomic.LoadInt64(&l.value)
 
@@ -52,13 +50,13 @@ func NewDownCounter(initialValue int64) DownCounter {
 	return DownCounter{
 		_baseCounter: _baseCounter{
 			value: initialValue,
-		}
+		},
 	}
 }
 
 func (l *DownCounter) Step() (newCount int64) {
 
-	newCount := l._baseLatch.step(-1)
+	newCount = l._baseCounter.step(-1)
 
 	return
 }
@@ -66,7 +64,7 @@ func (l *DownCounter) Step() (newCount int64) {
 // Obtains the current value of the latch, without changing its state.
 func (l *DownCounter) Load() (count int64) {
 
-	count := l._baseCounter.load()
+	count = l._baseCounter.load()
 
 	return
 }
@@ -82,18 +80,18 @@ type UpCounter struct {
 // Preconditions:
 // - initialValue < threshold;
 // - threshold - initialValue <= MaxLatchDistance;
-func NewUpCounter(initialValue) UpCounter {
+func NewUpCounter(initialValue int64) UpCounter {
 
 	return UpCounter{
 		_baseCounter: _baseCounter{
-			value: threshold,
-		}
+			value: initialValue,
+		},
 	}
 }
 
-func (l *UpCounter) Step() (newCount int64) {
+func (l *UpCounter) Step() (count int64) {
 
-	count := l._baseCounter.step(1)
+	count = l._baseCounter.step(1)
 
 	return
 }
@@ -101,7 +99,7 @@ func (l *UpCounter) Step() (newCount int64) {
 // Obtains the current value of the latch, without changing its state.
 func (l *UpCounter) Load() (count int64) {
 
-	count := l._baseLatch.load()
+	count = l._baseCounter.load()
 
 	return
 }
